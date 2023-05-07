@@ -4,17 +4,6 @@ import timm
 from torch.nn import functional as F
 
 
-class mobilenet(nn.module):
-    def __init__(self,
-                 model:str,
-                 pretrained=False):
-        super(mobilenet,self).__init__()
-
-        self.backbone = timm.create_model(model,pretrained=pretrained)
-
-    def forward(self,x):
-        return self.backbone(x)
-
 
 class ResBlock(nn.Module):
     def __init__(self,

@@ -84,7 +84,7 @@ def Linear(backbone, test_backbone,data_loader_train, data_loader_val):
     # Train linear classifier
     backbone.eval()
     linear_layer.train()
-    for epoch in range(1):
+    for epoch in range(2):
         for imgs, labels in data_loader_train:
             imgs = imgs.to(device)
             labels = labels.to(device)

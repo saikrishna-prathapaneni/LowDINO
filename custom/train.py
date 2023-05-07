@@ -1,20 +1,47 @@
 import argparse
 import json
 import pathlib
-import timm
+import os
 import torch
 import torchvision.transforms as transforms
-import tqdm
 from torch.utils.data import DataLoader, SubsetRandomSampler
-from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
-
-from eval import compute_embedding, compute_knn,Linear
-
+import datetime
+from eval import  compute_knn,Linear
 from Augmentation import DataAugmentation
 from model import Head, DinoLoss, MultiCrop, clip_gradients
 from mobile import mobilenet
 
+
+checkpoint_dir ="/checkpoints"
+
+
+def save_checkpoint(checkpoint_dir, epoch, model, args, knn_acc, linear_acc, checkpoint_filename="student_model"):
+    now = datetime.datetime.now()
+    iteration_dir = now.strftime("%Y-%m-%d_%H-%M-%S")
+    os.makedirs(os.path.join(checkpoint_dir, iteration_dir), exist_ok=True)
+
+    checkpoint_data = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'args': args,
+        'knn_accuracy': knn_acc,
+        'linear_acc':linear_acc
+    }
+
+
+    checkpoint_path = os.path.join(checkpoint_dir, iteration_dir, checkpoint_filename + "_epoch{}.pth".format(epoch))
+    torch.save(checkpoint_data, checkpoint_path)
+
+    # Save the args and accuracy to a separate file
+    args_filename = os.path.join(checkpoint_dir, iteration_dir, "args.txt")
+    with open(args_filename, "w") as f:
+        for arg in vars(args):
+            f.write("{}: {}\n".format(arg, getattr(args, arg)))
+    accuracy_filename = os.path.join(checkpoint_dir, iteration_dir, "accuracy.txt")
+    with open(accuracy_filename, "w") as f:
+        f.write("Epoch {}: accuracy = {}\n".format(epoch, knn_acc))
+        f.write("Epoch {}: accuracy = {}\n".format(epoch, linear_acc))
 
 
 def main():
@@ -22,8 +49,8 @@ def main():
         "DINO training CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=1)
-    parser.add_argument("-l", "--logging-freq", type=int, default=200)
+    parser.add_argument("-b", "--batch-size", type=int, default=32)
+    parser.add_argument("-l", "--logging-freq", type=int, default=30)
     parser.add_argument("--momentum-teacher", type=int, default=0.9995)
     parser.add_argument("-c", "--n-crops", type=int, default=4)
     parser.add_argument("-e", "--n-epochs", type=int, default=1)
@@ -40,10 +67,12 @@ def main():
     args = parser.parse_args()
     print(vars(args))
     # Parameters
+
+
     vit_name, dim = "vit_small_patch16_224", 640
-    path_dataset_train = pathlib.Path("data/imagenette2-320/train")
+    path_dataset_train = pathlib.Path("/vast/work/public/ml-datasets/imagenet/train")
     path_dataset_val = pathlib.Path("data/imagenette2-320/val")
-    path_labels = pathlib.Path("data/imagenette_labels.json")
+
 
     logging_path = pathlib.Path(args.tensorboard_dir)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -51,8 +80,8 @@ def main():
     n_workers = 1
 
     # Data related
-    with path_labels.open("r") as f:
-        label_mapping = json.load(f)
+    # with path_labels.open("r") as f:
+    #     label_mapping = json.load(f)
 
     transform_aug = DataAugmentation(size=224, n_local_crops=args.n_crops - 2)
     transform_plain = transforms.Compose(
@@ -106,10 +135,6 @@ def main():
         pin_memory=True,
     )
 
-    # Logging
-    writer = SummaryWriter(logging_path)
-    writer.add_text("arguments", json.dumps(vars(args)))
-
     # Neural network related
     # student_vit = timm.create_model(vit_name, pretrained=args.pretrained)
     # teacher_vit = timm.create_model(vit_name, pretrained=args.pretrained)
@@ -153,44 +178,7 @@ def main():
     n_steps = 0
 
     for e in range(args.n_epochs):
-        for i, (images, _) in tqdm.tqdm(
-            enumerate(data_loader_val_aug), total=n_batches
-        ):
-            if n_steps % args.logging_freq == 0:
-                student.eval()
-
-                # Embedding
-                # embs, imgs, labels_ = compute_embedding(
-                #     student.backbone,
-                #     data_loader_val_plain_subset,
-                # )
-                # writer.add_embedding(
-                #     embs,
-                #     metadata=[label_mapping[l] for l in labels_],
-                #     label_img=imgs,
-                #     global_step=n_steps,
-                #     tag="embeddings",
-                # )
-
-                # KNN
-                knn_acc = compute_knn(
-                    student.backbone,
-                    data_loader_train_plain,
-                    data_loader_val_plain,
-                )
-                # linear_acc = Linear(
-                #     student.backbone,
-                #     data_loader_train_plain,
-                #     data_loader_val_plain,
-                # )
-                writer.add_scalar("knn-accuracy", knn_acc, n_steps)
-               # writer.add_scalar("Linear-accuracy", linear_acc, n_steps)
-                if knn_acc > best_acc:
-                    torch.save(student, logging_path / "best_model.pth")
-                    best_acc = knn_acc
-                    print("best_accuracy knn => ",best_acc)
-                student.train()
-
+        for i, (images, _) in enumerate(data_loader_train_aug):
             images = [img.to(device) for img in images]
 
             teacher_output = teacher(images[:2])
@@ -212,9 +200,34 @@ def main():
                         (1 - args.momentum_teacher) * student_ps.detach().data
                     )
 
-            writer.add_scalar("train_loss", loss, n_steps)
-
+            print(f"train_loss epcoch number {e}", loss)
             n_steps += 1
+
+        if e % args.logging_freq == 0:
+                student.eval()
+
+                knn_acc = compute_knn(
+                    student.backbone,
+                    data_loader_train_plain,
+                    data_loader_val_plain,
+                )
+                linear_acc = Linear(
+                    student.backbone,
+                    data_loader_train_plain,
+                    data_loader_val_plain,
+                )
+                save_checkpoint(checkpoint_dir=checkpoint_dir,
+                                epoch=e,
+                                model=student,
+                                knn_acc=knn_acc,
+                                linear_acc=linear_acc,
+                                )
+                print("knn_accuracy => ",knn_acc)
+                # if knn_acc > best_acc:
+                #     torch.save(student, logging_path / "best_model.pth")
+                #     best_acc = knn_acc
+                #     print("best_accuracy knn => ",best_acc)
+                student.train()
 
 
 if __name__ == "__main__":
