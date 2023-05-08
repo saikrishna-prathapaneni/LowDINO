@@ -54,7 +54,7 @@ def compute_knn(backbone, data_loader_train, data_loader_val):
 
     return acc
 
-def Linear(backbone, test_backbone,data_loader_train, data_loader_val):
+def Linear(backbone,device, test_backbone,data_loader_train, data_loader_val):
     """Compute linear evaluation on the dataset.
 
     Parameters
