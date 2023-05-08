@@ -16,7 +16,7 @@ from mobile import mobilenet
 checkpoint_dir ="/checkpoints"
 
 
-def save_checkpoint(checkpoint_dir, epoch, model, args, knn_acc, linear_acc=0, checkpoint_filename="student_model"):
+def save_checkpoint(checkpoint_dir, epoch, model,args, knn_acc, linear_acc=0, checkpoint_filename="student_model"):
     now = datetime.datetime.now()
     iteration_dir = now.strftime("%Y-%m-%d_%H-%M-%S")
     os.makedirs(os.path.join(checkpoint_dir, iteration_dir), exist_ok=True)
@@ -49,10 +49,10 @@ def main():
         "DINO training CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=32)
+    parser.add_argument("-b", "--batch-size", type=int, default=64)
     parser.add_argument("-l", "--logging-freq", type=int, default=30)
     parser.add_argument("--momentum-teacher", type=int, default=0.9995)
-    parser.add_argument("-c", "--n-crops", type=int, default=4)
+    parser.add_argument("-c", "--n-crops", type=int, default=10)
     parser.add_argument("-e", "--n-epochs", type=int, default=1)
     parser.add_argument("-o", "--out-dim", type=int, default=1024)
     parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
@@ -71,11 +71,11 @@ def main():
 
     vit_name, dim = "vit_small_patch16_224", 640
     path_dataset_train = pathlib.Path("/vast/work/public/ml-datasets/imagenet/train")
-    path_dataset_val = pathlib.Path("/scratch/sp7238/val/val_2")
+    path_dataset_val = pathlib.Path("/scratch/sp7238/DL/data/val/val_2")
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    n_workers = 1
+    n_workers = 6
 
     # Data related
     # with path_labels.open("r") as f:
@@ -167,6 +167,7 @@ def main():
     n_steps = 0
 
     for e in range(args.n_epochs):
+        print("currently running epoch =>", e)
         for i, (images, _) in enumerate(data_loader_train_aug):
             images = [img.to(device) for img in images]
 
@@ -208,6 +209,7 @@ def main():
                 save_checkpoint(checkpoint_dir=checkpoint_dir,
                                 epoch=e,
                                 model=student,
+                                args=args,
                                 knn_acc=knn_acc
                                #linear_acc=linear_acc,
                                 )
