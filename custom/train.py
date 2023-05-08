@@ -16,7 +16,7 @@ from mobile import mobilenet
 checkpoint_dir ="/checkpoints"
 
 
-def save_checkpoint(checkpoint_dir, epoch, model, args, knn_acc, linear_acc, checkpoint_filename="student_model"):
+def save_checkpoint(checkpoint_dir, epoch, model, args, knn_acc, linear_acc=0, checkpoint_filename="student_model"):
     now = datetime.datetime.now()
     iteration_dir = now.strftime("%Y-%m-%d_%H-%M-%S")
     os.makedirs(os.path.join(checkpoint_dir, iteration_dir), exist_ok=True)
@@ -71,10 +71,8 @@ def main():
 
     vit_name, dim = "vit_small_patch16_224", 640
     path_dataset_train = pathlib.Path("/vast/work/public/ml-datasets/imagenet/train")
-    path_dataset_val = pathlib.Path("data/imagenette2-320/val")
+    path_dataset_val = pathlib.Path("/scratch/sp7238/val/val_2")
 
-
-    logging_path = pathlib.Path(args.tensorboard_dir)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     n_workers = 1
@@ -95,7 +93,6 @@ def main():
     dataset_train_aug = ImageFolder(path_dataset_train, transform=transform_aug)
     dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
     dataset_val_plain = ImageFolder(path_dataset_val, transform=transform_plain)
-    dataset_val_aug = ImageFolder(path_dataset_val, transform=transform_aug)
 
 
     data_loader_train_aug = DataLoader(
@@ -126,22 +123,14 @@ def main():
         num_workers=n_workers,
     )
 
-    data_loader_val_aug = DataLoader(
-        dataset_val_aug,
-        batch_size=args.batch_size,
-        shuffle=True,
-        drop_last=True,
-        num_workers=n_workers,
-        pin_memory=True,
-    )
-
+ 
     # Neural network related
     # student_vit = timm.create_model(vit_name, pretrained=args.pretrained)
     # teacher_vit = timm.create_model(vit_name, pretrained=args.pretrained)
     
     student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
-    test_student = mobilenet('mobilevit_s',pretrained=args.pretrained)
+    test_student= mobilenet('mobilevit_s',pretrained=args.pretrained)
 
     student = MultiCrop(
         student_vit,
@@ -200,7 +189,7 @@ def main():
                         (1 - args.momentum_teacher) * student_ps.detach().data
                     )
 
-            print(f"train_loss epcoch number {e}", loss)
+            print(f"train_loss epoch number {e}", loss)
             n_steps += 1
 
         if e % args.logging_freq == 0:
@@ -211,16 +200,16 @@ def main():
                     data_loader_train_plain,
                     data_loader_val_plain,
                 )
-                linear_acc = Linear(
-                    student.backbone,
-                    data_loader_train_plain,
-                    data_loader_val_plain,
-                )
+                # linear_acc = Linear(
+                #     student.backbone,
+                #     data_loader_train_plain,
+                #     data_loader_val_plain,
+                # )
                 save_checkpoint(checkpoint_dir=checkpoint_dir,
                                 epoch=e,
                                 model=student,
-                                knn_acc=knn_acc,
-                                linear_acc=linear_acc,
+                                knn_acc=knn_acc
+                               #linear_acc=linear_acc,
                                 )
                 print("knn_accuracy => ",knn_acc)
                 # if knn_acc > best_acc:
