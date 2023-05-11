@@ -11,71 +11,31 @@ from eval import  compute_knn,Linear
 from Augmentation import DataAugmentation
 from model import Head, DinoLoss, MultiCrop, clip_gradients
 from mobile import mobilenet
+from utils import save_checkpoint
+
+checkpoint_dir ="checkpoints"
 
 
-checkpoint_dir ="/checkpoints"
 
-
-def save_checkpoint(checkpoint_dir, epoch, model,args, knn_acc, linear_acc=0, checkpoint_filename="student_model"):
-    now = datetime.datetime.now()
-    iteration_dir = now.strftime("%Y-%m-%d_%H-%M-%S")
-    os.makedirs(os.path.join(checkpoint_dir, iteration_dir), exist_ok=True)
-
-    checkpoint_data = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'args': args,
-        'knn_accuracy': knn_acc,
-        'linear_acc':linear_acc
-    }
-
-
-    checkpoint_path = os.path.join(checkpoint_dir, iteration_dir, checkpoint_filename + "_epoch{}.pth".format(epoch))
-    torch.save(checkpoint_data, checkpoint_path)
-
-    # Save the args and accuracy to a separate file
-    args_filename = os.path.join(checkpoint_dir, iteration_dir, "args.txt")
-    with open(args_filename, "w") as f:
-        for arg in vars(args):
-            f.write("{}: {}\n".format(arg, getattr(args, arg)))
-    accuracy_filename = os.path.join(checkpoint_dir, iteration_dir, "accuracy.txt")
-    with open(accuracy_filename, "w") as f:
-        f.write("Epoch {}: accuracy = {}\n".format(epoch, knn_acc))
-        f.write("Epoch {}: accuracy = {}\n".format(epoch, linear_acc))
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        "DINO training CLI",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument("-b", "--batch-size", type=int, default=64)
-    parser.add_argument("-l", "--logging-freq", type=int, default=30)
-    parser.add_argument("--momentum-teacher", type=int, default=0.9995)
-    parser.add_argument("-c", "--n-crops", type=int, default=10)
-    parser.add_argument("-e", "--n-epochs", type=int, default=1)
-    parser.add_argument("-o", "--out-dim", type=int, default=1024)
-    parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
-    parser.add_argument("--clip-grad", type=float, default=2.0)
-    parser.add_argument("--norm-last-layer", action="store_true")
-    parser.add_argument("--batch-size-eval", type=int, default=8)
-    parser.add_argument("--teacher-temp", type=float, default=0.04)
-    parser.add_argument("--student-temp", type=float, default=0.1)
-    parser.add_argument("--pretrained", action="store_true")
-    parser.add_argument("-w", "--weight-decay", type=float, default=0.4)
-
-    args = parser.parse_args()
+def main(args):
+   
     print(vars(args))
     # Parameters
 
+    IMAGENET1K_TRAIN ="/vast/work/public/ml-datasets/imagenet/train"
+    IMAGENET1K_TEST = "/scratch/sp7238/DL/data/val/val_2"
+
+    img_train_small = "/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/train"
+    img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
     vit_name, dim = "vit_small_patch16_224", 640
-    path_dataset_train = pathlib.Path("/vast/work/public/ml-datasets/imagenet/train")
-    path_dataset_val = pathlib.Path("/scratch/sp7238/DL/data/val/val_2")
+    path_dataset_train = pathlib.Path(img_train_small)
+    path_dataset_val = pathlib.Path(img_val_small)
+ 
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    n_workers = 6
+    n_workers = 2
 
     # Data related
     # with path_labels.open("r") as f:
@@ -115,14 +75,7 @@ def main():
         drop_last=False,
         num_workers=n_workers,
     )
-    data_loader_val_plain_subset = DataLoader(
-        dataset_val_plain,
-        batch_size=args.batch_size_eval,
-        drop_last=False,
-        sampler=SubsetRandomSampler(list(range(0, len(dataset_val_plain), 50))),
-        num_workers=n_workers,
-    )
-
+   
  
     # Neural network related
     # student_vit = timm.create_model(vit_name, pretrained=args.pretrained)
@@ -154,6 +107,7 @@ def main():
         teacher_temp=args.teacher_temp,
         student_temp=args.student_temp,
     ).to(device)
+    
     lr = 0.0005 * args.batch_size / 256
     optimizer = torch.optim.AdamW(
         student.parameters(),
@@ -215,12 +169,32 @@ def main():
                                 )
                 print("knn_accuracy => ",knn_acc)
                 # if knn_acc > best_acc:
-                #     torch.save(student, logging_path / "best_model.pth")
+                #     torch.save(student, "best_model.pth")
                 #     best_acc = knn_acc
                 #     print("best_accuracy knn => ",best_acc)
                 student.train()
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        "DINO training CLI",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("-b", "--batch-size", type=int, default=16)
+    parser.add_argument("-l", "--logging-freq", type=int, default=1)
+    parser.add_argument("--momentum-teacher", type=int, default=0.9995)
+    parser.add_argument("-c", "--n-crops", type=int, default=8)
+    parser.add_argument("-e", "--n-epochs", type=int, default=50)
+    parser.add_argument("-o", "--out-dim", type=int, default=1024)
+    parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
+    parser.add_argument("--clip-grad", type=float, default=2.0)
+    parser.add_argument("--norm-last-layer", action="store_true")
+    parser.add_argument("--batch-size-eval", type=int, default=8)
+    parser.add_argument("--teacher-temp", type=float, default=0.04)
+    parser.add_argument("--student-temp", type=float, default=0.1)
+    parser.add_argument("--pretrained", action="store_true")
+    parser.add_argument("-w", "--weight-decay", type=float, default=0.4)
+
+    args = parser.parse_args()
+    main(args)
 
