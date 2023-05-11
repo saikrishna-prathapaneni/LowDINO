@@ -154,7 +154,7 @@ def main(args):
     torch.backends.cudnn.benchmark = True
 
     train_dir = os.path.join(args.data_path, 'train')
-    val_dir = os.path.join(args.data_path, 'val')
+    val_dir = os.path.join(args.val_path, 'val')
     dataset, dataset_test, train_sampler, test_sampler = load_data(train_dir, val_dir,
                                                                    args.cache_dataset, args.distributed)
     data_loader = torch.utils.data.DataLoader(
@@ -231,6 +231,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='PyTorch Classification Training')
 
     parser.add_argument('--data-path', default='/datasets01/imagenet_full_size/061417/', help='dataset')
+    parser.add_argument('--val-path', default='/datasets01/imagenet_full_size/061417/', help='dataset')
     parser.add_argument('--model', default='resnet18', help='model')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('-b', '--batch-size', default=32, type=int)
