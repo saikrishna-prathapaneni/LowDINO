@@ -29,6 +29,7 @@ class mobilenet(nn.Module):
         super(mobilenet,self).__init__()
         self.backbone = timm.create_model(model,pretrained=pretrained)
         self.backbone.reset_classifier(0)
+        self.num_features = self.backbone.num_features
 
     def forward(self,x):
         x = self.backbone(x)
