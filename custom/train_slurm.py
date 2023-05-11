@@ -147,7 +147,7 @@ def main(args):
                                 epoch=e,
                                 model=student,
                                 args=args,
-                                #knn_acc=knn_acc
+                                knn_acc=None
                                #linear_acc=linear_acc,
                                 )
                 #print("knn_accuracy => ",knn_acc)
@@ -164,7 +164,7 @@ if __name__ == "__main__":
         "DINO training CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=16)
+    parser.add_argument("-b", "--batch-size", type=int, default=64)
     parser.add_argument("-l", "--logging-freq", type=int, default=1)
     parser.add_argument("--momentum-teacher", type=int, default=0.9995)
     parser.add_argument("-c", "--n-crops", type=int, default=8)
