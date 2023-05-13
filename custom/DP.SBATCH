@@ -2,9 +2,9 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --time=48:00:00
-#SBATCH --mem=32GB           # total memory per node (4 GB per cpu-core is default)
+#SBATCH --mem=64GB           # total memory per node (4 GB per cpu-core is default)
 #SBATCH --gres=gpu:4
 #SBATCH --job-name=torch
 #SBATCH --mail-type=end          # send email when job ends
