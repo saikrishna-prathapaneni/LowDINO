@@ -185,6 +185,7 @@ def main(args):
                 save_checkpoint(checkpoint_dir=checkpoint_dir,
                                 epoch=e,
                                 model=student,
+                                time=0,
                                 args=args,
                                 knn_acc=knn_acc
                                #linear_acc=linear_acc,
