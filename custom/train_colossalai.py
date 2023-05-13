@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision.datasets import ImageFolder
 import datetime
+import time
 from eval import  compute_knn,Linear
 from Augmentation import DataAugmentation
 from model import Head, DinoLoss, MultiCrop, clip_gradients
@@ -44,8 +45,8 @@ def main(args):
     img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
     vit_name, dim = "vit_small_patch16_224", 640
-    path_dataset_train = pathlib.Path(img_train_small)
-    path_dataset_val = pathlib.Path(img_val_small)
+    path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
+    path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -87,8 +88,6 @@ def main(args):
         num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
         pin_memory=True,
     )
-
-
 
 
     colossalai_train_dataloader = get_dataloader(
@@ -163,6 +162,7 @@ def main(args):
     n_steps = 0
 
     for e in range(gpc.config.NUM_EPOCHS):
+        epoch_start_time = time.perf_counter()
         print("currently running epoch =>", e)
         student_engine.train()
         for i, (images, _) in enumerate(colossalai_train_dataloader):
@@ -190,6 +190,9 @@ def main(args):
             print(f"train_loss epoch number {e}", loss)
             n_steps += 1
         lr_scheduler.step()
+        epoch_end_time = time.perf_counter()
+        epoch_time = epoch_end_time - epoch_start_time
+        print("time taken to comeplete one epoch",epoch_time)
 
         if e % args.logging_freq == 0:
                 student_engine.eval()
@@ -209,7 +212,8 @@ def main(args):
                                     epoch=e,
                                     model=student,
                                     args=args,
-                                    knn_acc=knn_acc
+                                    knn_acc=knn_acc,
+                                    time= epoch_time
                                 #linear_acc=linear_acc,
                                     )
                 except:
