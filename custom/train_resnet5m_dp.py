@@ -124,15 +124,17 @@ def main(args):
     teacher.load_state_dict(student.state_dict())
 
     for p in teacher.parameters():
-        p.requires_grad = False\
+        p.requires_grad = False
     
-    student = nn.DataParallel(student, device_ids=args.device_ids)
-    teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
-   
+    
+    student, teacher = student.cuda(), teacher.cuda()
+    
     if has_batchnorms(student):
         student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
         teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
-    
+        teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
+
+    student = nn.DataParallel(student, device_ids=args.device_ids)
     teacher.load_state_dict(student.state_dict())
     for p in teacher.parameters():
         p.requires_grad = False
@@ -175,7 +177,7 @@ def main(args):
                     teacher_ps.data.add_(
                         (1 - args.momentum_teacher) * student_ps.detach().data
                     )
-
+            torch.cuda.synchronize()
             print(f"train_loss epoch number {e}", loss)
             
 
