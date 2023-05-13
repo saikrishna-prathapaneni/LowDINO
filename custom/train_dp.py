@@ -106,6 +106,25 @@ def main(args):
 
     #student = nn.parallel.DistributedDataParallel(student, device_ids=[args.local_rank])
     #teacher = nn.parallel.DistributedDataParallel(teacher, device_ids=[args.local_rank])
+    student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
+    teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
+    test_student= mobilenet('mobilevit_s',pretrained=args.pretrained)
+
+    student = MultiCrop(
+        student_vit,
+        Head(
+            dim,
+            args.out_dim,
+            norm_last_layer=args.norm_last_layer,
+        ),
+    )
+    teacher = MultiCrop(teacher_vit, Head(dim, args.out_dim))
+   
+    teacher.load_state_dict(student.state_dict())
+
+    for p in teacher.parameters():
+        p.requires_grad = False\
+    
     student = nn.DataParallel(student, device_ids=args.device_ids)
     teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
    
@@ -132,20 +151,6 @@ def main(args):
      )
     
 
-    data_loader_train_aug = DataLoader(
-        dataset_train_aug,
-       #sampler=sampler_train,
-        batch_size=args.batch_size,
-        drop_last=True,
-        num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
-        pin_memory=True
-    )
-    data_loader_val_plain = DataLoader(
-        dataset_val_plain,
-        batch_size=32,
-        drop_last=False,
-        num_workers=1,
-    )
     for e in range(args.n_epochs):
         print("currently running epoch =>", e)
         for i, (images, _) in enumerate(colossalai_train_dataloader):
@@ -171,7 +176,7 @@ def main(args):
                     )
 
             print(f"train_loss epoch number {e}", loss)
-            n_steps += 1
+            
 
         if e % args.logging_freq == 0:
                 student.eval()
