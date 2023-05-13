@@ -39,6 +39,9 @@ def main(args):
     path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
     path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
+    img_train_small = pathlib.Path(img_train_small)
+    img_val_small = pathlib.Path(img_val_small)
+
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
