@@ -63,7 +63,7 @@ def has_batchnorms(model):
             return True
     return False
 
-def save_checkpoint(checkpoint_dir, epoch, model, knn_acc,args, linear_acc=0, checkpoint_filename="student_model"):
+def save_checkpoint(checkpoint_dir, epoch, model, knn_acc,args,time, linear_acc=0, checkpoint_filename="student_model"):
     now = datetime.datetime.now()
     iteration_dir = now.strftime("%Y-%m-%d_%H-%M-%S")+'_epoch_'+str(epoch)
     print(iteration_dir)
@@ -89,5 +89,7 @@ def save_checkpoint(checkpoint_dir, epoch, model, knn_acc,args, linear_acc=0, ch
     accuracy_filename = os.path.join(checkpoint_dir, iteration_dir, "accuracy.txt")
     print(accuracy_filename)
     with open(accuracy_filename, "a") as f:
-        f.write("Epoch {}: accuracy = {}\n".format(epoch, knn_acc))
-        f.write("Epoch {}: accuracy = {}\n".format(epoch, linear_acc))
+        f.write("Epoch {}: KNN accuracy = {}\n".format(epoch, knn_acc))
+        f.write("Epoch {}: Linear accuracy = {}\n".format(epoch, linear_acc))
+        f.write("Time to comeplete the Epoch = {}\n".format(time))
+
