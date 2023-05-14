@@ -20,6 +20,7 @@ from resnet import ResNet5M
 
 checkpoint_dir ="checkpoints_ResNet5M_DP"
 
+
 def main(args):
     #init_distributed_mode(args)
     dim =512
@@ -36,12 +37,13 @@ def main(args):
     img_train_small = "/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/train"
     img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
-    vit_name, dim = "vit_small_patch16_224", 640
+   
     path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
     path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
     img_train_small = pathlib.Path(img_train_small)
     img_val_small = pathlib.Path(img_val_small)
+
 
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -65,6 +67,9 @@ def main(args):
     dataset_val_plain = ImageFolder(path_dataset_val, transform=transform_plain)
     dataset_train_plain_test = ImageFolder(img_train_small, transform=transform_plain)
     dataset_val_plain_test = ImageFolder(img_val_small, transform=transform_plain)
+
+
+
 
 
     data_loader_train_test = DataLoader(
@@ -109,7 +114,16 @@ def main(args):
     #teacher = nn.parallel.DistributedDataParallel(teacher, device_ids=[args.local_rank])
     student_vit = ResNet5M()
     teacher_vit = ResNet5M()
-    test_student= ResNet5M()
+    test_student= mobilenet()
+    test_student = MultiCrop(
+        test_student,
+        Head(
+            640,
+            1024,
+            norm_last_layer=args.norm_last_layer,
+        ),
+    )
+    print(test_student.eval())
 
     student = MultiCrop(
         student_vit,
@@ -119,25 +133,25 @@ def main(args):
             norm_last_layer=args.norm_last_layer,
         ),
     )
+    print(student.eval())
     teacher = MultiCrop(teacher_vit, Head(dim, args.out_dim))
    
     teacher.load_state_dict(student.state_dict())
 
+    
     for p in teacher.parameters():
         p.requires_grad = False
-    
     
     student, teacher = student.cuda(), teacher.cuda()
     
-    if has_batchnorms(student):
-        student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
-        teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
-        teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
+    # if has_batchnorms(student):
+    #     student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
+    #     teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
+    teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
 
     student = nn.DataParallel(student, device_ids=args.device_ids)
-    teacher.load_state_dict(student.state_dict())
-    for p in teacher.parameters():
-        p.requires_grad = False
+    
+
 
     lr = 0.0005 * args.batch_size / 256
    
@@ -183,11 +197,11 @@ def main(args):
 
         if e % args.logging_freq == 0:
                 student.eval()
-                knn_acc = compute_knn(
-                    student.backbone,
-                    data_loader_train_test,
-                    data_loader_val_test,
-                )
+                # knn_acc = compute_knn(
+                #     student.module.backbone,
+                #     data_loader_train_test,
+                #     data_loader_val_test,
+                # )
                 # linear_acc = Linear(
                 #     student.backbone,
                 #     data_loader_train_plain,
@@ -198,7 +212,7 @@ def main(args):
                                 model=student,
                                 time=0,
                                 args=args,
-                                knn_acc=knn_acc
+                                knn_acc=0
                                #linear_acc=linear_acc,
                                 )
                 #print("knn_accuracy => ",knn_acc)
@@ -215,11 +229,11 @@ if __name__ == "__main__":
         "DINO training CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=1024)
+    parser.add_argument("-b", "--batch-size", type=int, default=256)
     parser.add_argument("-l", "--logging-freq", type=int, default=1)
     parser.add_argument("--momentum-teacher", type=int, default=0.9995)
     parser.add_argument("-c", "--n-crops", type=int, default=4)
-    parser.add_argument("-e", "--n-epochs", type=int, default=50)
+    parser.add_argument("-e", "--n-epochs", type=int, default=100)
     parser.add_argument("-o", "--out-dim", type=int, default=1024)
     parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
     parser.add_argument("--clip-grad", type=float, default=2.0)
@@ -227,7 +241,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size-eval", type=int, default=8)
     parser.add_argument("--teacher-temp", type=float, default=0.04)
     parser.add_argument("--student-temp", type=float, default=0.1)
-    parser.add_argument("-d", "--device-ids", type=float, default=[0,1])
+    parser.add_argument("-d", "--device-ids", type=float, default=[0])
     parser.add_argument("--pretrained", action="store_true")
     parser.add_argument("-w", "--weight-decay", type=float, default=0.4)
 
