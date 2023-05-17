@@ -4,15 +4,6 @@ LowDINO scripts are present in the custom folder.
 
 
 
-Environment setup: \
-We have used CUDA 11.6 and Pytorch GPU to train all the models where are mentioned in this repository.
-<br>
-
-Pleaes refer to the following link to setup Pytorch CUDA locally \
-https://pytorch.org/get-started/locally/ \
-https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html
-<br>
-<br>
 
 ![alt model eval](./images/models_eval.png)
 <br>
@@ -24,7 +15,19 @@ Though these results show promising, more researches have to be done to compare 
 
 To get started with the training the LowDINO model 
 
+
 As a first step download the requirements and setup the working environment 
+
+Environment setup: \
+We have used CUDA 11.6 and Pytorch GPU to train all the models where are mentioned in this repository.
+<br>
+
+Pleaes refer to the following link to setup Pytorch CUDA locally \
+https://pytorch.org/get-started/locally/ \
+https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html
+<br>
+<br>
+
 
 ```
 pip install -r requirements.txt
