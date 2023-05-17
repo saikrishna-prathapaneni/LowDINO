@@ -8,7 +8,7 @@ Environment setup: \
 We have used CUDA 11.6 and Pytorch GPU to train all the models where are mentioned in this repository.
 <br>
 
-Pleaes refer to the following link to setup Pytorch CUDA locally
+Pleaes refer to the following link to setup Pytorch CUDA locally \
 https://pytorch.org/get-started/locally/ \
 https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html
 <br>
