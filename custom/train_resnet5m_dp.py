@@ -144,11 +144,10 @@ def main(args):
     
     student, teacher = student.cuda(), teacher.cuda()
     
-    # if has_batchnorms(student):
-    #     student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
-    #     teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
+    if has_batchnorms(student):
+        student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
+        teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
     teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
-
     student = nn.DataParallel(student, device_ids=args.device_ids)
     
 

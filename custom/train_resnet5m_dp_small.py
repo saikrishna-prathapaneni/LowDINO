@@ -14,14 +14,17 @@ from eval import  compute_knn,Linear
 from Augmentation import DataAugmentation
 from model import Head, DinoLoss, MultiCrop, clip_gradients
 from mobile import mobilenet
-from utils import save_checkpoint,cosine_scheduler
+from utils import save_checkpoint
+from resnet import ResNet5M
 
 
-checkpoint_dir ="checkpoints_DP"
+checkpoint_dir ="checkpoints_ResNet5M_DP"
+renset ="C:/Users/saipr/all projects/DL project/imagenette2-320/train"
+renset_val= "C:/Users/saipr/all projects/DL project/imagenette2-320/val"
 
 def main(args):
     #init_distributed_mode(args)
-    dim =640
+    dim =512
     #if args.rank == 0: print(f"Group initialized? {dist.is_initialized()}", flush=True)
 
     #args.local_rank = args.rank  - args.gpus * (args.rank // args.gpus)
@@ -35,13 +38,16 @@ def main(args):
     img_train_small = "/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/train"
     img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
-    vit_name, dim = "vit_small_patch16_224", 640
+   
     path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
     path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
     img_train_small = pathlib.Path(img_train_small)
     img_val_small = pathlib.Path(img_val_small)
 
+
+    img_train_small_res = pathlib.Path(renset)
+    img_val_small_res = pathlib.Path(renset_val)
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -59,56 +65,100 @@ def main(args):
         ]
     )
 
-    dataset_train_aug = ImageFolder(path_dataset_train, transform=transform_aug)
-    #dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
-    dataset_val_plain = ImageFolder(path_dataset_val, transform=transform_plain)
-    dataset_train_plain_test = ImageFolder(img_train_small, transform=transform_plain)
-    dataset_val_plain_test = ImageFolder(img_val_small, transform=transform_plain)
+    # dataset_train_aug = ImageFolder(path_dataset_train, transform=transform_aug)
+    # #dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
+    # dataset_val_plain = ImageFolder(path_dataset_val, transform=transform_plain)
+    # dataset_train_plain_test = ImageFolder(img_train_small, transform=transform_plain)
+    # dataset_val_plain_test = ImageFolder(img_val_small, transform=transform_plain)
 
+    dataset_train_res = ImageFolder(img_train_small_res, transform=transform_aug)
+    dataset_val_res = ImageFolder(img_val_small_res, transform=transform_plain)
+    dataset_val_res_plain = ImageFolder(img_train_small_res, transform=transform_plain)
 
     data_loader_train_test = DataLoader(
-        dataset_train_plain_test,
+        dataset_train_res,
         batch_size=args.batch_size,
         shuffle=True,
         drop_last=True,
-        num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+        num_workers=2,
         pin_memory=True,
     )
-    data_loader_val_test = DataLoader(
-        dataset_val_plain_test,
+    
+    data_loader_plain_test = DataLoader(
+        dataset_val_res,
         batch_size=args.batch_size,
         shuffle=True,
         drop_last=True,
-        num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+        num_workers=2,
+        pin_memory=True,
+    )
+
+    data_loader_plain_val = DataLoader(
+        dataset_val_res_plain,
+        batch_size=args.batch_size,
+        shuffle=True,
+        drop_last=True,
+        num_workers=2,
         pin_memory=True,
     )
 
 
-    colossalai_train_dataloader = DataLoader(
-        dataset_train_aug,
-        batch_size=args.batch_size,
-        shuffle=True,
-        drop_last=True,
-        num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
-        pin_memory=True
-    )
-    colossalai_test_dataloader = DataLoader(
-        dataset=dataset_val_plain,
-        batch_size=args.batch_size,
-        shuffle=True,
-        drop_last=True,
-        num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
-        pin_memory=True
-    )
+
+
+
+
+    # data_loader_train_test = DataLoader(
+    #     dataset_train_plain_test,
+    #     batch_size=args.batch_size,
+    #     shuffle=True,
+    #     drop_last=True,
+    #     num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+    #     pin_memory=True,
+    # )
+    # data_loader_val_test = DataLoader(
+    #     dataset_val_plain_test,
+    #     batch_size=args.batch_size,
+    #     shuffle=True,
+    #     drop_last=True,
+    #     num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+    #     pin_memory=True,
+    # )
+
+
+    # colossalai_train_dataloader = DataLoader(
+    #     dataset_train_aug,
+    #     batch_size=args.batch_size,
+    #     shuffle=True,
+    #     drop_last=True,
+    #     num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+    #     pin_memory=True
+    # )
+    # colossalai_test_dataloader = DataLoader(
+    #     dataset=dataset_val_plain,
+    #     batch_size=args.batch_size,
+    #     shuffle=True,
+    #     drop_last=True,
+    #     num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
+    #     pin_memory=True
+    # )
  
     #sampler_train = torch.utils.data.ditributed.DistributedSampler(dataset_train_aug, shuffle=True)
     #sampler = torch.utils.data.ditributed.DistributedSampler(dataset, shuffle=True)
 
     #student = nn.parallel.DistributedDataParallel(student, device_ids=[args.local_rank])
     #teacher = nn.parallel.DistributedDataParallel(teacher, device_ids=[args.local_rank])
-    student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
-    teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
-    test_student= mobilenet('mobilevit_s',pretrained=args.pretrained)
+    student_vit = ResNet5M()
+    teacher_vit = ResNet5M()
+    test_student= mobilenet()
+    test_student = MultiCrop(
+        test_student,
+        Head(
+            640,
+            1024,
+            norm_last_layer=args.norm_last_layer,
+        ),
+    )
+    print(test_student.eval())
 
     student = MultiCrop(
         student_vit,
@@ -118,23 +168,25 @@ def main(args):
             norm_last_layer=args.norm_last_layer,
         ),
     )
+    print(student.eval())
     teacher = MultiCrop(teacher_vit, Head(dim, args.out_dim))
    
     teacher.load_state_dict(student.state_dict())
 
-    for p in teacher.parameters():
-        p.requires_grad = False\
     
-    student = nn.DataParallel(student, device_ids=args.device_ids)
-    teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
-   
-    if has_batchnorms(student):
-        student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
-        teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
-    
-    teacher.load_state_dict(student.state_dict())
     for p in teacher.parameters():
         p.requires_grad = False
+    
+    student, teacher = student.cuda(), teacher.cuda()
+    
+    # if has_batchnorms(student):
+    #     student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
+    #     teacher = nn.SyncBatchNorm.convert_sync_batchnorm(teacher)
+    teacher = nn.DataParallel(teacher,device_ids=args.device_ids)
+
+    student = nn.DataParallel(student, device_ids=args.device_ids)
+    
+
 
     lr = 0.0005 * args.batch_size / 256
    
@@ -153,7 +205,7 @@ def main(args):
 
     for e in range(args.n_epochs):
         print("currently running epoch =>", e)
-        for i, (images, _) in enumerate(colossalai_train_dataloader):
+        for i, (images, _) in enumerate(data_loader_train_test):
             images = [img.to(device) for img in images]
 
             teacher_output = teacher(images[:2])
@@ -174,7 +226,7 @@ def main(args):
                     teacher_ps.data.add_(
                         (1 - args.momentum_teacher) * student_ps.detach().data
                     )
-
+            torch.cuda.synchronize()
             print(f"train_loss epoch number {e}", loss)
             
 
@@ -182,8 +234,8 @@ def main(args):
                 student.eval()
                 knn_acc = compute_knn(
                     student.module.backbone,
-                    data_loader_train_test,
-                    data_loader_val_test,
+                    data_loader_plain_test,
+                    data_loader_plain_val,
                 )
                 # linear_acc = Linear(
                 #     student.backbone,
@@ -212,11 +264,11 @@ if __name__ == "__main__":
         "DINO training CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=1024)
+    parser.add_argument("-b", "--batch-size", type=int, default=8)
     parser.add_argument("-l", "--logging-freq", type=int, default=1)
     parser.add_argument("--momentum-teacher", type=int, default=0.9995)
     parser.add_argument("-c", "--n-crops", type=int, default=4)
-    parser.add_argument("-e", "--n-epochs", type=int, default=50)
+    parser.add_argument("-e", "--n-epochs", type=int, default=100)
     parser.add_argument("-o", "--out-dim", type=int, default=1024)
     parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
     parser.add_argument("--clip-grad", type=float, default=2.0)
@@ -224,7 +276,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size-eval", type=int, default=8)
     parser.add_argument("--teacher-temp", type=float, default=0.04)
     parser.add_argument("--student-temp", type=float, default=0.1)
-    parser.add_argument("-d", "--device-ids", type=float, default=[0,1])
+    parser.add_argument("-d", "--device-ids", type=float, default=[0])
     parser.add_argument("--pretrained", action="store_true")
     parser.add_argument("-w", "--weight-decay", type=float, default=0.4)
 
