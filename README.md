@@ -72,18 +72,18 @@ Following are the models it supported backbones
 
 Other Hyperparameters that can be tuned and passed
 
--b or --batch-size: an integer indicating the batch size (default: 1024)
--l or --logging-freq: an integer indicating the frequency of logging (default: 1)
---momentum-teacher: a float indicating the momentum of the teacher model (default: 0.9995)
--c or --n-crops: an integer indicating the number of crops to be used for data augmentation (default: 4)
--e or --n-epochs: an integer indicating the number of training epochs (default: 50)
--o or --out-dim: an integer indicating the dimension of the output layer (default: 1024)
--t or --tensorboard-dir: a string indicating the directory to save TensorBoard logs (default: "logs")
---clip-grad: a float indicating the maximum value of the gradient norm for clipping (default: 2.0)
---norm-last-layer: a flag indicating whether to normalize the output of the last layer (default: False)
---batch-size-eval: an integer indicating the batch size for evaluation (default: 8)
---teacher-temp: a float indicating the temperature of the teacher model for distillation (default: 0.04)
---student-temp: a float indicating the temperature of the student model for distillation (default: 0.1)
--d or --device-ids: a list of integers indicating the device IDs(GPUs) to use for training (default: [0,1])
---pretrained: a flag indicating whether to use a pretrained model for training (default: False)
---weight-decay: a float indicating the weight decay for regularization (missing in the code snippet, no default value can be inferred)
+-b or --batch-size: an integer indicating the batch size (default: 1024) <br>
+-l or --logging-freq: an integer indicating the frequency of logging (default: 1)<br>
+--momentum-teacher: a float indicating the momentum of the teacher model (default: 0.9995) <br>
+-c or --n-crops: an integer indicating the number of crops to be used for data augmentation (default: 4)<br>
+-e or --n-epochs: an integer indicating the number of training epochs (default: 50)<br>
+-o or --out-dim: an integer indicating the dimension of the output layer (default: 1024)<br>
+-t or --tensorboard-dir: a string indicating the directory to save TensorBoard logs (default: "logs")<br>
+--clip-grad: a float indicating the maximum value of the gradient norm for clipping (default: 2.0)<br>
+--norm-last-layer: a flag indicating whether to normalize the output of the last layer (default: False)<br>
+--batch-size-eval: an integer indicating the batch size for evaluation (default: 8)<br>
+--teacher-temp: a float indicating the temperature of the teacher model for distillation (default: 0.04)<br>
+--student-temp: a float indicating the temperature of the student model for distillation (default: 0.1)<br>
+-d or --device-ids: a list of integers indicating the device IDs(GPUs) to use for training (default: [0,1])<br>
+--pretrained: a flag indicating whether to use a pretrained model for training (default: False)<br>
+--weight-decay: a float indicating the weight decay for regularization (default: 0.4)<br>
