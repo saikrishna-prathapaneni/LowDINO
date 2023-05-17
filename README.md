@@ -60,15 +60,15 @@ python train_dp.py --device-ids [0,1]
 ```
 
 pretrained==True applies to MobileViT model, one can Modify the mobilenet.py to change the models to 
-Following are the models it supported backbones
-
-'mobilevit_s':640,
-'mobilevit_xs':640,
-'mobilevit_xxs':640,
-'mobilenetv2_035':640,
-'mobilenetv2_075':640,
-'mobilenetv2_100':640,
-'resnet5m':512,
+Following are the models it supported backbones(Format shown is backbone: dim from the backbone)
+<br>
+'mobilevit_s':640  <br>
+'mobilevit_xs':640  <br>
+'mobilevit_xxs':640 <br>
+'mobilenetv2_035':640 <br>
+'mobilenetv2_075':640 <br>
+'mobilenetv2_100':640 <br>
+'resnet5m':512 <br>
 
 Other Hyperparameters that can be tuned and passed
 
