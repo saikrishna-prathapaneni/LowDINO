@@ -87,3 +87,11 @@ Other Hyperparameters that can be tuned and passed
 -d or --device-ids: a list of integers indicating the device IDs(GPUs) to use for training (default: [0,1])<br>
 --pretrained: a flag indicating whether to use a pretrained model for training (default: False)<br>
 --weight-decay: a float indicating the weight decay for regularization (default: 0.4)<br>
+
+
+### Experiments for Distillation and BYOL replication are present in notebooks_distillation Folder
+for MobileVits Distillation with ViT_s model use ***Distillation MobileVits.ipynb*** notebook
+for ResNet5M Distillation with ResNet50 model use ***distillation_trainings_resnet.ipynb***
+For running KNN on ResNet50 using BYOL follow ***BYOL.ipynb***
+
+
