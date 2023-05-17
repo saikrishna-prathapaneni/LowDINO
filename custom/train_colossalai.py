@@ -1,27 +1,21 @@
-import argparse
-import json
 import pathlib
 import os
 import torch
 import os
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-import datetime
 import time
-from eval import  compute_knn,Linear
+from eval import  compute_knn
 from Augmentation import DataAugmentation
-from model import Head, DinoLoss, MultiCrop, clip_gradients
+from model import Head, DinoLoss, MultiCrop
 from mobile import mobilenet
 from utils import save_checkpoint
 import colossalai
 from colossalai.core import global_context as gpc
-from colossalai.utils import get_dataloader, MultiTimer
-from colossalai.trainer import Trainer, hooks
-from colossalai.nn.metric import Accuracy
+from colossalai.utils import get_dataloader
 from torchvision import transforms
 from colossalai.nn.lr_scheduler import CosineAnnealingWarmupLR
-from tqdm import tqdm
 from colossalai.logging import get_dist_logger
 
 checkpoint_dir ="checkpoints"
@@ -44,7 +38,9 @@ def main(args):
     img_train_small = "/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/train"
     img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
-    vit_name, dim = "vit_small_patch16_224", 640
+    # change the path to train and test for train and test
+
+    dim = 640 # adjust the dimension according to the model used #for resnet dim =512
     path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
     path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
@@ -52,11 +48,9 @@ def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
-    # Data related
-    # with path_labels.open("r") as f:
-    #     label_mapping = json.load(f)
-    
+
     transform_aug = DataAugmentation(size=224, n_local_crops=args.n_crops - 2)
+
     transform_plain = transforms.Compose(
         [
             transforms.ToTensor(),
@@ -66,7 +60,6 @@ def main(args):
     )
 
     dataset_train_aug = ImageFolder(path_dataset_train, transform=transform_aug)
-    #dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
     dataset_val_plain = ImageFolder(path_dataset_val, transform=transform_plain)
     dataset_train_plain_test = ImageFolder(img_train_small, transform=transform_plain)
     dataset_val_plain_test = ImageFolder(img_train_small, transform=transform_plain)
@@ -104,14 +97,10 @@ def main(args):
     )
  
 
- 
-    # Neural network related
-    # student_vit = timm.create_model(vit_name, pretrained=args.pretrained)
-    # teacher_vit = timm.create_model(vit_name, pretrained=args.pretrained)
     
     student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
-    test_student= mobilenet('mobilevit_s',pretrained=args.pretrained)
+
 
     student = MultiCrop(
         student_vit,
@@ -157,8 +146,7 @@ def main(args):
     teacher.to(device)
 
     # Training loop
-    n_batches = len(dataset_train_aug) // args.batch_size
-    best_acc = 0
+
     n_steps = 0
 
     for e in range(gpc.config.NUM_EPOCHS):
@@ -202,11 +190,7 @@ def main(args):
                     data_loader_train_test,
                     data_loader_val_test,
                 )
-                # linear_acc = Linear(
-                #     student.backbone,
-                #     data_loader_train_plain,
-                #     data_loader_val_plain,
-                # )
+        
                 try:
                     save_checkpoint(checkpoint_dir=checkpoint_dir,
                                     epoch=e,
@@ -214,15 +198,10 @@ def main(args):
                                     args=args,
                                     knn_acc=knn_acc,
                                     time= epoch_time
-                                #linear_acc=linear_acc,
                                     )
                 except:
                     print('Directory Exists')
                 print("knn_accuracy => ",knn_acc)
-                # if knn_acc > best_acc:
-                #     torch.save(student, "best_model.pth")
-                #     best_acc = knn_acc
-                #     print("best_accuracy knn => ",best_acc)
                 student.train()
 
 

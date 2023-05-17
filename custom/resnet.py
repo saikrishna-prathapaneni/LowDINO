@@ -1,9 +1,9 @@
 
 import torch.nn as nn
-import timm
 from torch.nn import functional as F
 
 
+#resnet model
 
 class ResBlock(nn.Module):
     def __init__(self,
@@ -43,7 +43,6 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         out = self.block(x)
-        
         # If the skip connection is active, add the input to the output
         # If the skip connection is not active, add the skip connection to the output
         if not self.skip:

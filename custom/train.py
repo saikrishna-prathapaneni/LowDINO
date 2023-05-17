@@ -19,7 +19,6 @@ checkpoint_dir ="checkpoints"
 
 def main(args):
    
-    print(vars(args))
     # Parameters
 
     IMAGENET1K_TRAIN ="/vast/work/public/ml-datasets/imagenet/train"
@@ -37,9 +36,7 @@ def main(args):
 
     n_workers = 2
 
-    # Data related
-    # with path_labels.open("r") as f:
-    #     label_mapping = json.load(f)
+
 
     transform_aug = DataAugmentation(size=224, n_local_crops=args.n_crops - 2)
     transform_plain = transforms.Compose(

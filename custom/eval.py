@@ -6,20 +6,19 @@ from mobile import mobilenet
 import os
 import pathlib
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 def compute_knn(backbone, data_loader_train, data_loader_val):
-    """Get CLS embeddings and use KNN classifier on them.
+    """Get embeddings and use KNN classifier on them.
 
     We load all embeddings in memory and use sklearn. Should
     be doable.
 
     Parameters
     ----------
-    backbone : timm.models.vision_transformer.VisionTransformer
-        Vision transformer whose head is just an identity
-        mapping.
+    backbone : 
+       MobileViT or ResNet5M
 
     data_loader_train, data_loader_val : torch.utils.data.DataLoader
         Training and validation dataloader that does not apply any
@@ -28,7 +27,7 @@ def compute_knn(backbone, data_loader_train, data_loader_val):
     Returns
     -------
     val_accuracy : float
-        Validation accuracy.
+    Validation accuracy.
     """
     device = next(backbone.parameters()).device
 
@@ -197,39 +196,39 @@ def compute_embedding(backbone, data_loader):
     return embs, imgs, labels
 
 
+#testing the metrics
 
+# if __name__=="__main__":
+#     transform_plain = transforms.Compose(
+#         [
+#             transforms.ToTensor(),
+#             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+#             transforms.Resize((224, 224)),
+#         ]
+#     )
 
-if __name__=="__main__":
-    transform_plain = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-            transforms.Resize((224, 224)),
-        ]
-    )
+#     img_train_small = "data/imagenette2-320/train"
+#     img_val_small ="data/imagenette2-320/val"
+#     path_dataset_train = pathlib.Path(img_train_small)
+#     path_dataset_val = pathlib.Path(img_val_small)
+#     dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
+#     dataset_train_val = ImageFolder(path_dataset_val, transform=transform_plain)
 
-    img_train_small = "data/imagenette2-320/train"
-    img_val_small ="data/imagenette2-320/val"
-    path_dataset_train = pathlib.Path(img_train_small)
-    path_dataset_val = pathlib.Path(img_val_small)
-    dataset_train_plain = ImageFolder(path_dataset_train, transform=transform_plain)
-    dataset_train_val = ImageFolder(path_dataset_val, transform=transform_plain)
-
-    data_loader_train_plain = DataLoader(
-        dataset_train_plain,
-        batch_size=16,
-        drop_last=False,
-        num_workers=1,
-    )
-    data_loader_train_plain = DataLoader(
-        dataset_train_val,
-        batch_size=16,
-        drop_last=False,
-        num_workers=1,
-    )
-    backbone= mobilenet()
-    backbone =torch.load('Linear_weights/best_model.pth')
+#     data_loader_train_plain = DataLoader(
+#         dataset_train_plain,
+#         batch_size=16,
+#         drop_last=False,
+#         num_workers=1,
+#     )
+#     data_loader_train_plain = DataLoader(
+#         dataset_train_val,
+#         batch_size=16,
+#         drop_last=False,
+#         num_workers=1,
+#     )
+#     backbone= mobilenet()
+#     backbone =torch.load('Linear_weights/best_model.pth')
     
-    #print(backbone.eval())
-    val = Linear(backbone,'cuda',data_loader_train_plain,data_loader_train_plain)
-    print(val)
+#     #print(backbone.eval())
+#     val = Linear(backbone,'cuda',data_loader_train_plain,data_loader_train_plain)
+#     print(val)

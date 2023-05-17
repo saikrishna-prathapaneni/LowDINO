@@ -4,14 +4,9 @@ import sys
 import numpy as np
 import torch.nn as nn
 import torch.distributed as dist
-import torch.backends.cudnn as cudnn
-import torch.nn.functional as F
-from torchvision import datasets, transforms
-from sklearn.metrics import accuracy_score
 import datetime
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, SubsetRandomSampler
-from torchvision.datasets import ImageFolder
+
+#utils contains setting up distributed systems
 
 def cosine_scheduler(base_value, final_value, epochs, niter_per_ep, warmup_epochs=0, start_warmup_value=0):
     warmup_schedule = np.array([])

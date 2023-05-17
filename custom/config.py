@@ -1,5 +1,9 @@
 from colossalai.amp import AMP_TYPE
 
+
+
+# configuration for setting up colossalai framework
+
 # hyperparameters
 # BATCH_SIZE is as per GPU
 # global batch size = BATCH_SIZE x data parallel size

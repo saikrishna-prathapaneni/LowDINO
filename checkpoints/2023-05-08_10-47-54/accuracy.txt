@@ -1,0 +1,2 @@
+Epoch 1: accuracy = 99
+Epoch 1: accuracy = 0

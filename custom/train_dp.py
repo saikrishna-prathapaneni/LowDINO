@@ -9,23 +9,23 @@ import torch.distributed as dist
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from utils import has_batchnorms, init_distributed_mode,setup_for_distributed
-from eval import  compute_knn,Linear
+from utils import has_batchnorms
+from eval import  compute_knn
 from Augmentation import DataAugmentation
 from model import Head, DinoLoss, MultiCrop, clip_gradients
 from mobile import mobilenet
-from utils import save_checkpoint,cosine_scheduler
+from utils import save_checkpoint
+
+
+#data parallel scripting for the model
 
 
 checkpoint_dir ="checkpoints_DP"
 
 def main(args):
-    #init_distributed_mode(args)
+  
     dim =640
-    #if args.rank == 0: print(f"Group initialized? {dist.is_initialized()}", flush=True)
-
-    #args.local_rank = args.rank  - args.gpus * (args.rank // args.gpus)
-    #torch.cuda.set_device(args.local_rank)
+   
     device = 'cuda'
 
     

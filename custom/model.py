@@ -98,6 +98,10 @@ class MultiCrop(nn.Module):
 
 
 class DinoLoss(nn.Module):
+    '''
+    Loss function
+    
+    '''
     def __init__(self,
                  out_dim, teacher_temp =0.04,student_temp=0.1, center_momentum =0.9
                  ) -> None:
@@ -142,6 +146,7 @@ class DinoLoss(nn.Module):
         teacher_output : tuple
             Tuple of tensors of shape `(n_samples, out_dim)` where each
             tensor represents a different crop.
+            based on the momentum
         """
         batch_center = torch.cat(teacher_output).mean(
             dim=0, keepdim=True
