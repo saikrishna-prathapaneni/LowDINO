@@ -24,7 +24,7 @@ checkpoint_dir ="checkpoints_DP"
 
 def main(args):
   
-    dim =640
+    dim =640 # change this parameter according to the model backbone output you are using for Mobilevit it is 640
    
     device = 'cuda'
 
@@ -35,7 +35,6 @@ def main(args):
     img_train_small = "/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/train"
     img_val_small ="/scratch/sp7238/DL/LowDINO/custom/data/imagenette2-320/val"
 
-    vit_name, dim = "vit_small_patch16_224", 640
     path_dataset_train = pathlib.Path(IMAGENET1K_TRAIN)
     path_dataset_val = pathlib.Path(IMAGENET1K_TEST)
  
@@ -46,9 +45,6 @@ def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
-    # Data related
-    # with path_labels.open("r") as f:
-    #     label_mapping = json.load(f)
     
     transform_aug = DataAugmentation(size=224, n_local_crops=args.n_crops - 2)
     transform_plain = transforms.Compose(
@@ -101,10 +97,7 @@ def main(args):
         pin_memory=True
     )
  
-    #sampler_train = torch.utils.data.ditributed.DistributedSampler(dataset_train_aug, shuffle=True)
-    #sampler = torch.utils.data.ditributed.DistributedSampler(dataset, shuffle=True)
 
-    #student = nn.parallel.DistributedDataParallel(student, device_ids=[args.local_rank])
     #teacher = nn.parallel.DistributedDataParallel(teacher, device_ids=[args.local_rank])
     student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
@@ -185,24 +178,15 @@ def main(args):
                     data_loader_train_test,
                     data_loader_val_test,
                 )
-                # linear_acc = Linear(
-                #     student.backbone,
-                #     data_loader_train_plain,
-                #     data_loader_val_plain,
-                # )
+
                 save_checkpoint(checkpoint_dir=checkpoint_dir,
                                 epoch=e,
                                 model=student,
                                 time=0,
                                 args=args,
                                 knn_acc=knn_acc
-                               #linear_acc=linear_acc,
                                 )
-                #print("knn_accuracy => ",knn_acc)
-                # if knn_acc > best_acc:
-                #     torch.save(student, "best_model.pth")
-                #     best_acc = knn_acc
-                #     print("best_accuracy knn => ",best_acc)
+        
                 student.train()
 
 
@@ -218,13 +202,12 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--n-crops", type=int, default=4)
     parser.add_argument("-e", "--n-epochs", type=int, default=50)
     parser.add_argument("-o", "--out-dim", type=int, default=1024)
-    parser.add_argument("-t", "--tensorboard-dir", type=str, default="logs")
     parser.add_argument("--clip-grad", type=float, default=2.0)
     parser.add_argument("--norm-last-layer", action="store_true")
     parser.add_argument("--batch-size-eval", type=int, default=8)
     parser.add_argument("--teacher-temp", type=float, default=0.04)
     parser.add_argument("--student-temp", type=float, default=0.1)
-    parser.add_argument("-d", "--device-ids", type=float, default=[0,1])
+    parser.add_argument("-d", "--device-ids", type=list, default=[0,1])
     parser.add_argument("--pretrained", action="store_true")
     parser.add_argument("-w", "--weight-decay", type=float, default=0.4)
 
