@@ -70,7 +70,7 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
 
-Other Hyperparameters that can be tuned and passed
+Other Hyperparameters that can be tuned for the both models
 
 -b or --batch-size: an integer indicating the batch size (default: 1024) <br>
 -l or --logging-freq: an integer indicating the frequency of logging (default: 1)<br>
@@ -90,8 +90,10 @@ Other Hyperparameters that can be tuned and passed
 
 
 ### Experiments for Distillation and BYOL replication are present in notebooks_distillation Folder
-for MobileVits Distillation with ViT_s model use ***Distillation MobileVits.ipynb*** notebook
-for ResNet5M Distillation with ResNet50 model use ***distillation_trainings_resnet.ipynb***
-For running KNN on ResNet50 using BYOL follow ***BYOL.ipynb***
+for MobileVits Distillation with ViT_s model use ***Distillation MobileVits.ipynb*** notebook. <br>
+for ResNet5M Distillation with ResNet50 model use ***distillation_trainings_resnet.ipynb***.<br>
+For running KNN on ResNet50 using BYOL follow ***BYOL.ipynb***.<br>
+
+### For linear evaluation use ***finetuning.ipynb*** and custom KNN evaluation use ***knn_eval.ipynb*** in notebooks_distillation folder
 
 
