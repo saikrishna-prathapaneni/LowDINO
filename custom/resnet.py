@@ -80,7 +80,7 @@ class ResNet5M(nn.Module):
         # Global average pooling and fully-connected layer
         self.avgpool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
         self.flat = nn.Flatten()
-        self.fc = nn.Linear(in_features=512, out_features=10, bias=True)
+        # self.fc = nn.Linear(in_features=512, out_features=10, bias=True)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -99,5 +99,5 @@ class ResNet5M(nn.Module):
         x = self.resblock14(x)
         x = self.avgpool(x)
         x = self.flat(x)
-        x = self.fc(x) 
+        # x = self.fc(x) 
         return x
