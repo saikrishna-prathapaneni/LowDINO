@@ -59,7 +59,7 @@ available
 python train_dp.py --device-ids [0,1]
 ```
 
-pretrained==True applies to MobileViT model, one can Modify the mobilenet.py to change the models to 
+pretrained==True applies to MobileViT model, one can Modify the mobilenet.py to change the models. <br> 
 Following are the models it supported backbones(Format shown is backbone: dim from the backbone)
 <br>
 'mobilevit_s':640  <br>
