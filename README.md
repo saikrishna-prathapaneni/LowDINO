@@ -41,7 +41,7 @@ cd custom
 
 There are two different scripts to make your tranining faster 
 
-one use pytorch DataParallel and Colossalai's Distributed Dataparallel
+one use pytorch DataParallel and the other uses Colossalai's Distributed Dataparallel. <br>
 To train the model of ResNet5M/MobileViT model using colossalai's Distributed Dataparallel
 
 follow this command:
