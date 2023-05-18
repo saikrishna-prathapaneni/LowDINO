@@ -74,8 +74,8 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
     
 ```
 <br>
-as show in the code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py
-<br>
+As show in the code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py
+
 
 ```
     student_vit = ResNet5M()
