@@ -68,9 +68,20 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 
 ![alt snippet_mobilenet_code](./test/snippet.png)<br>
 
+```
+  
+    student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
+    teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
+    
+```
+
 as show in the code snippet one needs to change the teacher and student network here for mobilenet.
 
-
+```
+    student_vit = ResNet5m()
+    teacher_vit = ResNet5m()
+    
+```
 for ResNet5m refer the above snippet!
 <br>
 These are selected backbone networks but can use the other base models along with them like ViT, ResNet101, EfficientNet etc.! <br>
