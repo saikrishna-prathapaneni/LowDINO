@@ -66,7 +66,6 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
 
-![alt snippet_mobilenet_code](./test/snippet.png)<br>
 
 ```
   
@@ -78,8 +77,8 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 as show in the code snippet one needs to change the teacher and student network here for mobilenet.
 
 ```
-    student_vit = ResNet5m()
-    teacher_vit = ResNet5m()
+    student_vit = ResNet5M()
+    teacher_vit = ResNet5M()
     
 ```
 for ResNet5m refer the above snippet!
