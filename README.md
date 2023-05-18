@@ -69,7 +69,7 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_075':640 <br>
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
-
+These are selected backbone networks but can use the other base models along with them like ViT, ResNet101, EfficientNet etc.! <br>
 Other Hyperparameters that can be tuned for the both models
 
 -b or --batch-size: an integer indicating the batch size (default: 1024) <br>
