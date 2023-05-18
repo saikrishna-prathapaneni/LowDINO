@@ -38,7 +38,7 @@ cd custom
 There are two different scripts to make your tranining faster 
 
 one use pytorch DataParallel and the other uses Colossalai's Distributed Dataparallel. <br>
-To train the model of ResNet5M/MobileViT model using colossalai's Distributed Dataparallel
+To train the model of ResNet5M/MobileViT model using colossalai's Distributed Dataparallel <br>
 
 follow this command:
 
@@ -66,22 +66,23 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
 
-
+<br>
 ```
   
     student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     
 ```
-
-as show in the code snippet one needs to change the teacher and student network here for mobilenet.
+<br>
+as show in the code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py
+<br>
 
 ```
     student_vit = ResNet5M()
     teacher_vit = ResNet5M()
     
 ```
-for ResNet5m refer the above snippet!
+for ResNet5m refer the above snippet in the scripts of train_dp.py and train_colossalai.py! <br>
 <br>
 These are selected backbone networks but can use the other base models along with them like ViT, ResNet101, EfficientNet etc.! <br>
 Other Hyperparameters that can be tuned for the both models
