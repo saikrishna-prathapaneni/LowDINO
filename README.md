@@ -1,9 +1,5 @@
 # LowDINO A low parameter self supervised learning model
 
-LowDINO scripts are present in the custom folder.
-
-
-
 
 ![alt model eval](./images/models_eval.png)
 <br>
@@ -69,6 +65,11 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_075':640 <br>
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
+
+![alt snippet_code](./test/snippet.png)<br>
+
+as show in the code snippet one needs to change the teacher and student network here.
+<br>
 These are selected backbone networks but can use the other base models along with them like ViT, ResNet101, EfficientNet etc.! <br>
 Other Hyperparameters that can be tuned for the both models
 
