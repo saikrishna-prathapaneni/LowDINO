@@ -66,7 +66,8 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
 'mobilenetv2_100':640 <br>
 'resnet5m':512 <br>
 
-<br>
+As show in the follwing code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py.
+
 ```
   
     student_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
@@ -74,7 +75,7 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
     
 ```
 
-As show in the code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py
+for ResNet5m refer the following snippet in the scripts of train_dp.py and train_colossalai.py! <br>
 
 
 ```
@@ -82,7 +83,7 @@ As show in the code snippet one needs to change the teacher and student network 
     teacher_vit = ResNet5M()
     
 ```
-for ResNet5m refer the above snippet in the scripts of train_dp.py and train_colossalai.py! <br>
+
 <br>
 These are selected backbone networks but can use the other base models along with them like ViT, ResNet101, EfficientNet etc.! <br>
 Other Hyperparameters that can be tuned for the both models
