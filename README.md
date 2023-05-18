@@ -73,7 +73,7 @@ Following are the models it supported backbones(Format shown is backbone: dim fr
     teacher_vit = mobilenet('mobilevit_s',pretrained=args.pretrained)
     
 ```
-<br>
+
 As show in the code snippet one needs to change the teacher and student network here for mobilenet in the scripts of train_dp.py and train_colossalai.py
 
 
